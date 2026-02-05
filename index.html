@@ -1,80 +1,84 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Signature Pad</title>
-  <style>
-    body { font-family: sans-serif; background: #fff; margin: 0; padding: 10px; text-align: center; overflow: hidden; touch-action: none; }
-    #canvas-container { width: 100%; max-width: 500px; margin: 0 auto; position: relative; }
-    canvas { 
-        background: #fafafa; 
-        border: 2px dashed #ccc; 
-        border-radius: 8px; 
-        width: 100%; 
-        height: 250px; 
-        cursor: crosshair; 
-        touch-action: none; /* 브라우저 스크롤 방지 */
-    }
-    .btns { margin-top: 15px; display: flex; gap: 10px; justify-content: center; }
-    button { padding: 12px 24px; border-radius: 6px; border: none; font-size: 15px; cursor: pointer; font-weight: bold; }
-    .clear { background: #eee; color: #333; }
-    .save { background: #0042da; color: #fff; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Signature</title>
+    <style>
+        body { margin: 0; padding: 10px; text-align: center; font-family: sans-serif; touch-action: none; }
+        canvas { border: 2px solid #333; background: #fff; width: 100%; height: 250px; cursor: crosshair; touch-action: none; border-radius: 8px; }
+        .btns { margin-top: 15px; display: flex; gap: 10px; justify-content: center; }
+        button { padding: 12px 24px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .clear { background: #eee; }
+        .save { background: #0042da; color: #fff; }
+    </style>
 </head>
 <body>
-  <div id="canvas-container">
-    <canvas id="sig-pad"></canvas>
-  </div>
-  <div class="btns">
-    <button class="clear" onclick="clearSig()">다시 그리기</button>
-    <button class="save" onclick="saveSig()">서명 완료</button>
-  </div>
+    <canvas id="canvas"></canvas>
+    <div class="btns">
+        <button class="clear" onclick="clearCanvas()">다시 그리기</button>
+        <button class="save" onclick="saveSignature()">서명 완료</button>
+    </div>
 
-  <script src="https://cdn.jsdelivr.net"></script>
-  <script>
-    const canvas = document.getElementById('sig-pad');
-    let signaturePad;
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
 
-    // 캔버스 좌표 및 크기 정밀 보정 함수
-    function resizeCanvas() {
-        const ratio = Math.max(window.devicePixelRatio || 1, 1);
-        canvas.width = canvas.offsetWidth * ratio;
-        canvas.height = canvas.offsetHeight * ratio;
-        canvas.getContext("2d").scale(ratio, ratio);
-        if (signaturePad) signaturePad.clear();
-    }
+        // 캔버스 크기 설정
+        function resize() {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = '#000';
+        }
+        window.addEventListener('resize', resize);
+        resize();
 
-    // 초기화
-    window.onload = () => {
-        signaturePad = new SignaturePad(canvas, {
-            backgroundColor: 'rgb(255, 255, 255)',
-            penColor: 'rgb(0, 0, 0)',
-            velocityFilterWeight: 0.7
-        });
-        resizeCanvas();
-    };
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: clientX - rect.left, y: clientY - rect.top };
+        }
 
-    // 화면 크기 변할 때 대응
-    window.addEventListener("resize", resizeCanvas);
+        function start(e) {
+            drawing = true;
+            const pos = getPos(e);
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        }
 
-    function clearSig() { 
-        signaturePad.clear(); 
-    }
+        function move(e) {
+            if (!drawing) return;
+            e.preventDefault();
+            const pos = getPos(e);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+        }
 
-    function saveSig() {
-      if (signaturePad.isEmpty()) return alert("서명을 해주세요.");
-      
-      const dataURL = signaturePad.toDataURL("image/png");
+        function stop() { drawing = false; }
 
-      // Typebot 부모창으로 데이터 전송
-      window.parent.postMessage({
-        type: 'signature_success',
-        dataURL: dataURL
-      }, '*');
+        canvas.addEventListener('mousedown', start);
+        canvas.addEventListener('mousemove', move);
+        window.addEventListener('mouseup', stop);
 
-      alert("서명이 저장되었습니다. 아래 '다음' 버튼을 눌러주세요.");
-    }
-  </script>
+        canvas.addEventListener('touchstart', start, {passive: false});
+        canvas.addEventListener('touchmove', move, {passive: false});
+        canvas.addEventListener('touchend', stop);
+
+        function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+
+        function saveSignature() {
+            const dataURL = canvas.toDataURL('image/png');
+            // Typebot에 데이터 전송
+            if (window.parent) {
+                window.parent.postMessage({ type: 'signature_success', dataURL: dataURL }, '*');
+                alert("서명이 저장되었습니다!");
+            }
+        }
+    </script>
 </body>
 </html>
