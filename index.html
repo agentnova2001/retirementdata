@@ -71,12 +71,22 @@
 
         function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
 
-        function saveSignature() {
-            const dataURL = canvas.toDataURL('image/png');
-            // Typebot에 데이터 전송
-            if (window.parent) {
-                window.parent.postMessage({ type: 'signature_success', dataURL: dataURL }, '*');
-                alert("서명이 저장되었습니다!");
+function saveSignature() {
+    const dataURL = canvas.toDataURL('image/png');
+    
+    if (window.parent) {
+        // 1. 데이터 전송
+        window.parent.postMessage({ 
+            type: 'signature_success', 
+            dataURL: dataURL 
+        }, '*');
+
+        // 2. 다음 단계로 넘어가라는 신호 추가 전송
+        window.parent.postMessage({ 
+            type: 'go_next' 
+        }, '*');
+        
+        alert("서명이 저장되었습니다!");
             }
         }
     </script>
