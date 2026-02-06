@@ -127,17 +127,21 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
-    function submitSignature() {
-      const dataUrl = canvas.toDataURL("image/png");
+function submitSignature() {
+  const dataURL = canvas.toDataURL("image/png");
 
-      // 👉 Typebot으로 값 전달
-      window.parent.postMessage(
-        {
-          type: "signature",
-          value: dataUrl
-        },
-        "*"
-      );
+  // 1. 서명 데이터 전달
+  window.parent.postMessage({
+    type: "signature",
+    value: dataURL
+  }, "*");
+
+  // 2. Typebot에게 "이제 됐어" 신호
+  window.parent.postMessage({
+    type: "typebot-event",
+    eventName: "signature_done"
+  }, "*");
+}
 
       alert("서명이 저장되었습니다.");
     }
