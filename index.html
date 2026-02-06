@@ -82,9 +82,9 @@ function saveSignature() {
         }, '*');
 
         // 2. 다음 단계로 넘어가라는 신호 추가 전송
-        window.parent.postMessage({ 
-            type: 'go_next' 
-        }, '*');
+    setTimeout(() => {
+        window.parent.postMessage('go_next', '*');
+    }, 200);
         
         alert("서명이 저장되었습니다!");
             }
