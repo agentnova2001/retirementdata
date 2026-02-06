@@ -1,96 +1,46 @@
+[김정규 (Jake)] 2026-02-06 17:24
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>서명을 해 주세요.</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8">
+  <title>Canvas Test</title>
   <style>
     body {
       margin: 0;
-      padding: 10px;
-      background: #fafafa;
-      text-align: center;
-      font-family: sans-serif;
+      padding: 0;
     }
-
     canvas {
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      background: #fff;
-      touch-action: none; /* 🔥 매우 중요 */
-    }
-
-    .buttons {
-      margin-top: 8px;
-    }
-
-    button {
-      padding: 6px 10px;
-      margin: 0 4px;
-      font-size: 14px;
+      border: 2px solid red;
     }
   </style>
 </head>
 <body>
 
-  <canvas id="canvas" width="320" height="120"></canvas>
+<canvas id="c" width="400" height="150"></canvas>
 
-  <div class="buttons">
-    <button onclick="clearCanvas()">다시그리기</button>
-    <button onclick="submitSignature()">서명완료</button>
-  </div>
+<script>
+  const c = document.getElementById("c");
+  const ctx = c.getContext("2d");
 
-  <script>
-    const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
+  let down = false;
 
-    ctx.lineWidth = 2;
-    ctx.lineCap = "round";
-    ctx.strokeStyle = "#000";
+  c.addEventListener("mousedown", (e) => {
+    down = true;
+    ctx.beginPath();
+    ctx.moveTo(e.offsetX, e.offsetY);
+    console.log("DOWN");
+  });
 
-    let drawing = false;
+  c.addEventListener("mousemove", (e) => {
+    if (!down) return;
+    ctx.lineTo(e.offsetX, e.offsetY);
+    ctx.stroke();
+  });
 
-    function getPos(e) {
-      const rect = canvas.getBoundingClientRect();
-      return {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-      };
-    }
+  window.addEventListener("mouseup", () => {
+    down = false;
+  });
+</script>
 
-    canvas.addEventListener("pointerdown", (e) => {
-      drawing = true;
-      const pos = getPos(e);
-      ctx.beginPath();
-      ctx.moveTo(pos.x, pos.y);
-    });
-
-    canvas.addEventListener("pointermove", (e) => {
-      if (!drawing) return;
-      const pos = getPos(e);
-      ctx.lineTo(pos.x, pos.y);
-      ctx.stroke();
-    });
-
-    canvas.addEventListener("pointerup", () => {
-      drawing = false;
-    });
-
-    canvas.addEventListener("pointerleave", () => {
-      drawing = false;
-    });
-
-    function clearCanvas() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-
-    function submitSignature() {
-      const dataURL = canvas.toDataURL("image/png");
-
-      // 서명 이미지 전달
-      window.parent.postMessage({
-        type: "signature",
-        value: dataURL
-      }, "*");
-
-      // Typebot Embed 이벤트
+</body>
+</html>
