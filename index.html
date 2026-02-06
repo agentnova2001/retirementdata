@@ -75,20 +75,19 @@ function saveSignature() {
     const dataURL = canvas.toDataURL('image/png');
     
     if (window.parent) {
-        // 1. 데이터 전송
-        window.parent.postMessage({ 
-            type: 'signature_success', 
-            dataURL: dataURL 
-        }, '*');
+        // 1. 데이터 전송 (Script 블록이 받음)
+        window.parent.postMessage({ type: 'signature_success', dataURL: dataURL }, '*');
 
-        // 2. 다음 단계로 넘어가라는 신호 추가 전송
-    setTimeout(() => {
-        window.parent.postMessage('go_next', '*');
-    }, 200);
+        // 2. 다음 단계 이동 신호 (0.2초 뒤 전송)
+        // 핵심: { type: 'go_next' } 대신 그냥 'go_next' 문자열만 보냅니다.
+        setTimeout(() => {
+            window.parent.postMessage('go_next', '*');
+        }, 200);
         
-        alert("서명이 저장되었습니다!");
-            }
-        }
+ //       alert("서명이 저장되었습니다!");
+    }
+}
+
     </script>
 </body>
 </html>
