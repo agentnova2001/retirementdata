@@ -2,22 +2,22 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>서명을 해 주십시오.</title>
+  <title>서명을 해 주세요.</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       margin: 0;
       padding: 10px;
-      font-family: sans-serif;
       background: #fafafa;
       text-align: center;
+      font-family: sans-serif;
     }
 
     canvas {
       border: 1px solid #ccc;
       border-radius: 6px;
-      touch-action: none; /* 모바일 필수 */
       background: #fff;
+      touch-action: none; /* 🔥 매우 중요 */
     }
 
     .buttons {
@@ -52,50 +52,33 @@
 
     function getPos(e) {
       const rect = canvas.getBoundingClientRect();
-      if (e.touches) {
-        return {
-          x: e.touches[0].clientX - rect.left,
-          y: e.touches[0].clientY - rect.top
-        };
-      }
       return {
         x: e.clientX - rect.left,
         y: e.clientY - rect.top
       };
     }
 
-    function startDraw(e) {
-      e.preventDefault();
+    canvas.addEventListener("pointerdown", (e) => {
       drawing = true;
       const pos = getPos(e);
       ctx.beginPath();
       ctx.moveTo(pos.x, pos.y);
-    }
+    });
 
-    function draw(e) {
+    canvas.addEventListener("pointermove", (e) => {
       if (!drawing) return;
-      e.preventDefault();
       const pos = getPos(e);
       ctx.lineTo(pos.x, pos.y);
       ctx.stroke();
-    }
+    });
 
-    function endDraw(e) {
-      if (!drawing) return;
-      e.preventDefault();
+    canvas.addEventListener("pointerup", () => {
       drawing = false;
-    }
+    });
 
-    // 마우스
-    canvas.addEventListener("mousedown", startDraw);
-    canvas.addEventListener("mousemove", draw);
-    canvas.addEventListener("mouseup", endDraw);
-    canvas.addEventListener("mouseleave", endDraw);
-
-    // 터치
-    canvas.addEventListener("touchstart", startDraw);
-    canvas.addEventListener("touchmove", draw);
-    canvas.addEventListener("touchend", endDraw);
+    canvas.addEventListener("pointerleave", () => {
+      drawing = false;
+    });
 
     function clearCanvas() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -104,19 +87,10 @@
     function submitSignature() {
       const dataURL = canvas.toDataURL("image/png");
 
-      // 1️⃣ 서명 이미지 전달
+      // 서명 이미지 전달
       window.parent.postMessage({
         type: "signature",
         value: dataURL
       }, "*");
 
-      // 2️⃣ Typebot Embed 이벤트 (Wait for event)
-      window.parent.postMessage({
-        type: "typebot-event",
-        eventName: "signature_done"
-      }, "*");
-    }
-  </script>
-
-</body>
-</html>
+      // Typebot Embed 이벤트
