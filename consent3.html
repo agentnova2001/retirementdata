@@ -8,8 +8,7 @@
   <style>
     body {
       margin: 0;
-      padding: 0;
-      background: #f7f7f7;
+      background: #f5f5f5;
       font-family: sans-serif;
       display: flex;
       justify-content: center;
@@ -30,17 +29,18 @@
     .pad-container {
       position: relative;
       width: 100%;
-      height: 220px; /* 높이 60% 수준 */
-      background: #fff;
+      height: 110px; /* 기존 대비 절반 */
       border: 1px solid #ccc;
       overflow: hidden;
       touch-action: none;
+      background: white;
     }
 
     .bg {
       position: absolute;
       inset: 0;
       display: flex;
+      z-index: 0;
     }
 
     .bg div {
@@ -49,26 +49,26 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      font-size: 22px;      /* 글자 크게 */
-      font-weight: 700;     /* 진하게 */
-      color: #999;
-      line-height: 1.2;
+      font-size: 22px;
+      font-weight: 900;
+      color: #000;
       user-select: none;
       white-space: pre-line;
     }
 
     .bg .agree {
-      background: #fafafa;
-      border-right: 1px solid #ddd;
+      background: #d9efff; /* 하늘색 */
+      border-right: 1px solid #bbb;
     }
 
     .bg .disagree {
-      background: #ffffff; /* 요청: 흰색 */
+      background: #ffffff;
     }
 
     canvas {
       position: absolute;
       inset: 0;
+      z-index: 1;
     }
 
     .buttons {
@@ -104,7 +104,7 @@
     </div>
 
     <div class="pad-container" id="pad">
-      <div class="bg">
+      <div class="bg" id="bg">
         <div class="agree">동의</div>
         <div class="disagree">동의하지<br>않음</div>
       </div>
@@ -121,9 +121,10 @@
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
     const pad = document.getElementById("pad");
+    const bg = document.getElementById("bg");
 
     let drawing = false;
-    let currentSide = null; // 'AGREE' or 'DISAGREE'
+    let currentSide = null;
     let hasDrawn = false;
 
     function resizeCanvas() {
@@ -134,7 +135,7 @@
     resizeCanvas();
     window.addEventListener("resize", resizeCanvas);
 
-    function getPosition(e) {
+    function getPos(e) {
       const rect = canvas.getBoundingClientRect();
       const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
       const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
@@ -146,7 +147,7 @@
     }
 
     function startDraw(e) {
-      const { x, y } = getPosition(e);
+      const { x, y } = getPos(e);
       const side = getSide(x);
 
       if (currentSide && side !== currentSide) {
@@ -164,7 +165,7 @@
     function draw(e) {
       if (!drawing) return;
 
-      const { x, y } = getPosition(e);
+      const { x, y } = getPos(e);
       const side = getSide(x);
 
       if (side !== currentSide) {
@@ -174,7 +175,7 @@
 
       ctx.lineWidth = 3;
       ctx.lineCap = "round";
-      ctx.strokeStyle = "#000";
+      ctx.strokeStyle = "green"; /* 녹색 */
       ctx.lineTo(x, y);
       ctx.stroke();
     }
@@ -196,7 +197,16 @@
         return;
       }
 
-      const resultImage = canvas.toDataURL("image/png");
+      /* 배경 + 캔버스 합성 */
+      const merged = document.createElement("canvas");
+      merged.width = canvas.width;
+      merged.height = canvas.height;
+      const mctx = merged.getContext("2d");
+
+      mctx.drawImage(bgToCanvas(), 0, 0);
+      mctx.drawImage(canvas, 0, 0);
+
+      const resultImage = merged.toDataURL("image/png");
       const CONSENT3_FLAG = currentSide;
 
       const win = window.open("");
@@ -205,6 +215,31 @@
         <p>FLAG: <b>${CONSENT3_FLAG}</b></p>
         <img src="${resultImage}" style="width:100%;border:1px solid #ccc;" />
       `);
+    }
+
+    function bgToCanvas() {
+      const bgCanvas = document.createElement("canvas");
+      bgCanvas.width = canvas.width;
+      bgCanvas.height = canvas.height;
+      const bctx = bgCanvas.getContext("2d");
+
+      const leftWidth = bgCanvas.width / 2;
+
+      bctx.fillStyle = "#d9efff";
+      bctx.fillRect(0, 0, leftWidth, bgCanvas.height);
+
+      bctx.fillStyle = "#ffffff";
+      bctx.fillRect(leftWidth, 0, leftWidth, bgCanvas.height);
+
+      bctx.fillStyle = "#000";
+      bctx.font = "900 22px sans-serif";
+      bctx.textAlign = "center";
+      bctx.textBaseline = "middle";
+
+      bctx.fillText("동의", leftWidth / 2, bgCanvas.height / 2);
+      bctx.fillText("동의하지\n않음", leftWidth + leftWidth / 2, bgCanvas.height / 2);
+
+      return bgCanvas;
     }
 
     canvas.addEventListener("mousedown", startDraw);
