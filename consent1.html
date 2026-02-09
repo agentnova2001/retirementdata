@@ -158,16 +158,16 @@ function submitPad(){
   if(!hasDrawn){ alert("동의 또는 미동의 표시해주세요."); return; }
   const img=canvas.toDataURL("image/png");
 
-  // Typebot 이벤트 전송 (payload 구조 필수)
-  if(window.top){
-    window.top.postMessage({
-      type:"typebot",
-      eventName:"consent1_completed",
+  // Typebot Embed 이벤트 전송
+  if(window.parent){  
+    window.parent.postMessage({
+      type: "typebot",
+      eventName: "consent1_completed",
       payload: {
         consent1_flag: currentSide,
         consent1_image: img
       }
-    },"*");
+    }, "*");
     console.log("Typebot event sent", currentSide, img.length);
   }
 }
