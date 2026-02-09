@@ -138,7 +138,7 @@ function move(e){
   if(!drawing) return;
   const {x,y}=getPos(e);
   if(getSide(x)!==currentSide){ resetPad(); return; }
-  ctx.strokeStyle="rgba(0,160,0,0.5)"; // 초록 + 투명도
+  ctx.strokeStyle="rgba(0,160,0,0.5)"; // 초록 + 투명
   ctx.lineWidth=3;
   ctx.lineCap="round";
   ctx.lineTo(x,y);
@@ -156,7 +156,16 @@ function resetPad(){
 
 function submitPad(){
   if(!hasDrawn){ alert("동의 또는 미동의 표시해주세요."); return; }
-  const img=canvas.toDataURL("image/png");
+
+  // 캔버스 축소 이미지 생성
+  const tmpCanvas = document.createElement("canvas");
+  const scale = 0.5;
+  tmpCanvas.width = canvas.width * scale;
+  tmpCanvas.height = canvas.height * scale;
+  const tmpCtx = tmpCanvas.getContext("2d");
+  tmpCtx.drawImage(canvas, 0, 0, tmpCanvas.width, tmpCanvas.height);
+
+  const img = tmpCanvas.toDataURL("image/png");
 
   // Typebot Embed 이벤트 전송
   if(window.parent){  
