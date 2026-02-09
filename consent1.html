@@ -49,11 +49,16 @@ resize();
 
 function drawBackground(){
   const w=canvas.width, h=canvas.height;
-  ctx.fillStyle="#cfeeff"; ctx.fillRect(0,0,w/2,h);      // 좌측 배경
-  ctx.fillStyle="#ffffff"; ctx.fillRect(w/2,0,w/2,h);   // 우측 배경
-  ctx.strokeStyle="#bbb"; ctx.beginPath(); ctx.moveTo(w/2,0); ctx.lineTo(w/2,h); ctx.stroke(); // 경계
+  // 좌측 배경
+  ctx.fillStyle="#cfeeff"; ctx.fillRect(0,0,w/2,h);
+  // 우측 배경
+  ctx.fillStyle="#ffffff"; ctx.fillRect(w/2,0,w/2,h);
+  // 경계
+  ctx.strokeStyle="#bbb"; ctx.beginPath(); ctx.moveTo(w/2,0); ctx.lineTo(w/2,h); ctx.stroke();
+  // 상단 라벨
   ctx.fillStyle="#000"; ctx.font="900 11px sans-serif"; ctx.textAlign="center"; ctx.textBaseline="top";
   ctx.fillText("[동의]", w/4, 6); ctx.fillText("[미동의]", (w*3)/4, 6);
+  // 중앙 텍스트
   ctx.font="900 22px sans-serif"; ctx.textBaseline="middle";
   ctx.fillText("동의", w/4, h/2); ctx.fillText("동의하지", (w*3)/4, h/2-12); ctx.fillText("않음", (w*3)/4, h/2+12);
 }
@@ -92,15 +97,15 @@ function resetPad(){
 }
 
 function submitPad(){
-  if(!hasDrawn){ alert("동의 또는 미동의 중 하나에 표시해주세요."); return; }
+  if(!hasDrawn){ alert("동의 또는 미동의 표시해주세요."); return; }
   const img=canvas.toDataURL("image/png");
 
-  // ✅ Typebot으로 보내기
+  // Typebot으로 전달
   window.parent.postMessage({
-    type:"typebot",
-    consent1_flag: currentSide,
+    type: "typebot",          // 반드시 typebot
+    consent1_flag: currentSide, 
     consent1_image: img
-  },"*");
+  }, "*");
 
   alert("Consent1 입력이 Typebot으로 전달되었습니다.");
 }
