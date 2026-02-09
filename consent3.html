@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>개인정보 제3자 제공 동의(선택)</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: sans-serif;
+      background: #f5f5f5;
+    }
+
+    .wrapper {
+      max-width: 360px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 12px;
+      border-radius: 8px;
+    }
+
+    .title {
+      font-size: 15px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .canvas-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 3 / 1;
+      border: 1px solid #ccc;
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    button {
+      flex: 1;
+      padding: 10px;
+      font-size: 14px;
+      border: none;
+      border-radius: 4px;
+    }
+
+    .submit {
+      background: #2b6ef2;
+      color: #fff;
+    }
+
+    .reset {
+      background: #ddd;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrapper">
+    <div class="title">개인정보 제3자 제공 동의 (선택)</div>
+
+    <div class="canvas-wrap">
+      <canvas id="bgCanvas"></canvas>
+      <canvas id="drawCanvas"></canvas>
+    </div>
+
+    <div class="buttons">
+      <button class="reset" onclick="resetCanvas()">다시하기</button>
+      <button class="submit" onclick="submitConsent()">제출</button>
+    </div>
+  </div>
+
+<script>
+  const CONSENT_ID = 'CONSENT_3'; // ⭐ 하드코딩 식별자
+
+  const bgCanvas = document.getElementById('bgCanvas');
+  const drawCanvas = document.getElementById('drawCanvas');
+  const bgCtx = bgCanvas.getContext('2d');
+  const drawCtx = drawCanvas.getContext('2d');
+
+  function resizeCanvas() {
+    const rect = bgCanvas.parentElement.getBoundingClientRect();
+    [bgCanvas, drawCanvas].forEach(c => {
+      c.width = rect.width;
+      c.height = rect.height;
+    });
+    drawBackground();
+  }
+
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  function drawBackground() {
+    bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+
+    // 좌측: 동의
+    bgCtx.fillStyle = '#eef7ff';
+    bgCtx.fillRect(0, 0, bgCanvas.width / 2, bgCanvas.height);
+
+    // 우측: 동의하지 않음
+    bgCtx.fillStyle = '#fff1f1';
+    bgCtx.fillRect(bgCanvas.width / 2, 0, bgCanvas.width / 2, bgCanvas.height);
+
+    bgCtx.strokeStyle = '#999';
+    bgCtx.beginPath();
+    bgCtx.moveTo(bgCanvas.width / 2, 0);
+    bgCtx.lineTo(bgCanvas.width / 2, bgCanvas.height);
+    bgCtx.stroke();
+
+    bgCtx.fillStyle = '#555';
+    bgCtx.font = '16px sans-serif';
+    bgCtx.textAlign = 'center';
+    bgCtx.textBaseline = 'middle';
+
+    bgCtx.fillText('동의', bgCanvas.width / 4, bgCanvas.height / 2);
+    bgCtx.fillText('동의하지 않음', bgCanvas.width * 0.75, bgCanvas.height / 2);
+  }
+
+  let drawing = false;
+
+  function getPos(e) {
+    const rect = drawCanvas.getBoundingClientRect();
+    if (e.touches) {
+      return {
+        x: e.touches[0].clientX - rect.left,
+        y: e.touches[0].clientY - rect.top
+      };
+    }
+    return {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    };
+  }
+
+  function startDraw(e) {
+    drawing = true;
+    const pos = getPos(e);
+    drawCtx.beginPath();
+    drawCtx.moveTo(pos.x, pos.y);
+  }
+
+  function draw(e) {
+    if (!drawing) return;
+    const pos = getPos(e);
+    drawCtx.lineTo(pos.x, pos.y);
+    drawCtx.strokeStyle = '#000';
+    drawCtx.lineWidth = 3;
+    drawCtx.lineCap = 'round';
+    drawCtx.stroke();
+  }
+
+  function endDraw() {
+    drawing = false;
+  }
+
+  drawCanvas.addEventListener('mousedown', startDraw);
+  drawCanvas.addEventListener('mousemove', draw);
+  drawCanvas.addEventListener('mouseup', endDraw);
+  drawCanvas.addEventListener('mouseleave', endDraw);
+
+  drawCanvas.addEventListener('touchstart', startDraw);
+  drawCanvas.addEventListener('touchmove', draw);
+  drawCanvas.addEventListener('touchend', endDraw);
+
+  function resetCanvas() {
+    drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+  }
+
+  function submitConsent() {
+    const resultCanvas = document.createElement('canvas');
+    resultCanvas.width = bgCanvas.width;
+    resultCanvas.height = bgCanvas.height;
+    const rctx = resultCanvas.getContext('2d');
+
+    rctx.drawImage(bgCanvas, 0, 0);
+    rctx.drawImage(drawCanvas, 0, 0);
+
+    const imageData = resultCanvas.toDataURL('image/png');
+
+    const pixels = drawCtx.getImageData(0, 0, drawCanvas.width, drawCanvas.height).data;
+    let left = 0, right = 0;
+
+    for (let i = 0; i < pixels.length; i += 4) {
+      if (pixels[i + 3] > 0) {
+        const x = (i / 4) % drawCanvas.width;
+        x < drawCanvas.width / 2 ? left++ : right++;
+      }
+    }
+
+    const consentFlag = left >= right ? '동의' : '동의하지 않음';
+
+    // ✅ 테스트용 결과 팝업
+    const w = window.open('', '_blank');
+    w.document.write(`
+      <h3>Consent3 결과</h3>
+      <p>선택 결과: <b>${consentFlag}</b></p>
+      <img src="${imageData}" style="width:100%;" />
+    `);
+
+    // 🔗 Typebot 연계용 (추후 사용)
+    /*
+    window.parent.postMessage({
+      type: CONSENT_ID,
+      flag: consentFlag,
+      image: imageData
+    }, '*');
+    */
+  }
+</script>
+</body>
+</html>
