@@ -68,18 +68,18 @@
 </head>
 
 <body>
-  <div class="wrapper">
-    <div class="title">개인정보 제3자 제공 동의 (선택)</div>
+<div class="wrapper">
+  <div class="title">개인정보 제3자 제공 동의 (선택)</div>
 
-    <div class="pad-container" id="pad">
-      <canvas id="canvas"></canvas>
-    </div>
-
-    <div class="buttons">
-      <button class="reset" onclick="resetPad()">다시하기</button>
-      <button class="submit" onclick="submitPad()">제출</button>
-    </div>
+  <div class="pad-container" id="pad">
+    <canvas id="canvas"></canvas>
   </div>
+
+  <div class="buttons">
+    <button class="reset" onclick="resetPad()">다시하기</button>
+    <button class="submit" onclick="submitPad()">제출</button>
+  </div>
+</div>
 
 <script>
   const pad = document.getElementById("pad");
@@ -103,22 +103,18 @@
     const w = canvas.width;
     const h = canvas.height;
 
-    // 좌측 배경 (동의)
     ctx.fillStyle = "#cfeeff";
     ctx.fillRect(0, 0, w / 2, h);
 
-    // 우측 배경 (미동의)
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(w / 2, 0, w / 2, h);
 
-    // 경계선
     ctx.strokeStyle = "#bbb";
     ctx.beginPath();
     ctx.moveTo(w / 2, 0);
     ctx.lineTo(w / 2, h);
     ctx.stroke();
 
-    // 상단 라벨
     ctx.fillStyle = "#000";
     ctx.font = "900 11px sans-serif";
     ctx.textAlign = "center";
@@ -127,7 +123,6 @@
     ctx.fillText("[동의]", w / 4, 6);
     ctx.fillText("[미동의]", (w * 3) / 4, 6);
 
-    // 중앙 텍스트
     ctx.font = "900 22px sans-serif";
     ctx.textBaseline = "middle";
 
@@ -199,12 +194,21 @@
       return;
     }
 
-    const img = canvas.toDataURL("image/png");
+    const consent3_image = canvas.toDataURL("image/png");
+    const consent3_flag = currentSide;
+
+    /* 🔗 Typebot 연계용 */
+    window.parent.postMessage({
+      consent3_image,
+      consent3_flag
+    }, "*");
+
+    /* 🔍 테스트 팝업 */
     const win = window.open("");
     win.document.write(`
       <h3>Consent3 결과</h3>
-      <p>FLAG: <b>${currentSide}</b></p>
-      <img src="${img}" style="width:100%;border:1px solid #ccc"/>
+      <p>FLAG: <b>${consent3_flag}</b></p>
+      <img src="${consent3_image}" style="width:100%;border:1px solid #ccc"/>
     `);
   }
 
