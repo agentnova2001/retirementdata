@@ -131,7 +131,7 @@ function move(e){
   if(!drawing) return;
   const {x,y}=getPos(e);
   if(getSide(x)!==currentSide){ resetPad(); return; }
-  ctx.strokeStyle="rgba(0,160,0,0.5)"; // 초록 + 투명
+  ctx.strokeStyle="rgba(0,160,0,0.5)"; // 초록 + 반투명
   ctx.lineWidth=3;
   ctx.lineCap="round";
   ctx.lineTo(x,y);
@@ -150,7 +150,7 @@ function resetPad(){
 function submitPad(){
   if(!hasDrawn){ alert("동의 또는 미동의 표시해주세요."); return; }
 
-  // Typebot 이벤트로 flag만 전송 (다음 버블 이동 가능)
+  // Typebot 이벤트 전송 (flag만)
   if(window.parent){  
     window.parent.postMessage({
       type: "typebot",
@@ -160,7 +160,7 @@ function submitPad(){
     console.log("Typebot event sent", currentSide);
   }
 
-  // 팝업으로 이미지 확인 (선택, Typebot은 base64 전송 X)
+  // 테스트용 팝업으로 이미지 확인 (Typebot에는 전송 X)
   const img = canvas.toDataURL("image/png");
   const win = window.open("");
   win.document.write(`<h3>Consent1 이미지 확인</h3><img src="${img}" style="width:100%;border:1px solid #ccc"/>`);
