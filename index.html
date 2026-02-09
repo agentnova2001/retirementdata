@@ -1,46 +1,82 @@
-[김정규 (Jake)] 2026-02-06 17:24
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-  <meta charset="utf-8">
-  <title>Canvas Test</title>
+  <meta charset="UTF-8" />
+  <title>전자서명 테스트</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <style>
     body {
+      font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif;
+      background: #f7f7f7;
       margin: 0;
-      padding: 0;
+      padding: 24px;
     }
-    canvas {
-      border: 2px solid red;
+
+    h1 {
+      text-align: center;
+      font-size: 22px;
+      margin-bottom: 32px;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    }
+
+    .card h2 {
+      font-size: 16px;
+      margin-bottom: 12px;
+    }
+
+    .card p {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 16px;
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      text-align: center;
+      padding: 14px 0;
+      background: #2f6df6;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+    }
+
+    .btn:active {
+      background: #1f56cc;
     }
   </style>
 </head>
+
 <body>
 
-<canvas id="c" width="400" height="150"></canvas>
+  <h1>전자 동의 · 서명 테스트</h1>
 
-<script>
-  const c = document.getElementById("c");
-  const ctx = c.getContext("2d");
+  <div class="card">
+    <h2>① 개인정보 수집·이용 동의</h2>
+    <p>개인정보 수집 및 이용에 대한 동의 서명을 진행합니다.</p>
+    <a class="btn" href="consent1.html">서명하러 가기</a>
+  </div>
 
-  let down = false;
+  <div class="card">
+    <h2>② 제3자 제공 동의</h2>
+    <p>개인정보 제3자 제공에 대한 동의 서명을 진행합니다.</p>
+    <a class="btn" href="consent2.html">서명하러 가기</a>
+  </div>
 
-  c.addEventListener("mousedown", (e) => {
-    down = true;
-    ctx.beginPath();
-    ctx.moveTo(e.offsetX, e.offsetY);
-    console.log("DOWN");
-  });
-
-  c.addEventListener("mousemove", (e) => {
-    if (!down) return;
-    ctx.lineTo(e.offsetX, e.offsetY);
-    ctx.stroke();
-  });
-
-  window.addEventListener("mouseup", () => {
-    down = false;
-  });
-</script>
+  <div class="card">
+    <h2>③ 마케팅 활용 동의</h2>
+    <p>마케팅 목적의 개인정보 활용 동의 서명을 진행합니다.</p>
+    <a class="btn" href="consent3.html">서명하러 가기</a>
+  </div>
 
 </body>
 </html>
