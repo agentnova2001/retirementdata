@@ -103,18 +103,22 @@
     const w = canvas1.width;
     const h = canvas1.height;
 
+    // 좌측 배경 (동의)
     ctx1.fillStyle = "#cfeeff";
     ctx1.fillRect(0, 0, w / 2, h);
 
+    // 우측 배경 (미동의)
     ctx1.fillStyle = "#ffffff";
     ctx1.fillRect(w / 2, 0, w / 2, h);
 
+    // 경계선
     ctx1.strokeStyle = "#bbb";
     ctx1.beginPath();
     ctx1.moveTo(w / 2, 0);
     ctx1.lineTo(w / 2, h);
     ctx1.stroke();
 
+    // 상단 라벨
     ctx1.fillStyle = "#000";
     ctx1.font = "900 11px sans-serif";
     ctx1.textAlign = "center";
@@ -122,6 +126,7 @@
     ctx1.fillText("[동의]", w / 4, 6);
     ctx1.fillText("[미동의]", (w * 3) / 4, 6);
 
+    // 중앙 텍스트
     ctx1.font = "900 22px sans-serif";
     ctx1.textBaseline = "middle";
     ctx1.fillText("동의", w / 4, h / 2);
@@ -167,7 +172,7 @@
       return;
     }
 
-    ctx1.strokeStyle = "rgb(0,160,0)";
+    ctx1.strokeStyle = "rgba(0,160,0,0.5)";
     ctx1.lineWidth = 3;
     ctx1.lineCap = "round";
     ctx1.lineTo(x, y);
@@ -192,13 +197,21 @@
       return;
     }
 
-    const img = canvas1.toDataURL("image/png");
-    const win = window.open("");
-    win.document.write(`
-      <h3>Consent1 결과</h3>
-      <p>FLAG: <b>${currentSide1}</b></p>
-      <img src="${img}" style="width:100%;border:1px solid #ccc"/>
-    `);
+    const imageBase64_1 = canvas1.toDataURL("image/png");
+
+    // 👉 Typebot 변수 전달
+    window.parent.postMessage(
+      {
+        type: "typebot:setVariables",
+        variables: {
+          consent1_flag: currentSide1,
+          consent1_image: imageBase64_1
+        }
+      },
+      "*"
+    );
+
+    alert("Consent1 입력이 Typebot으로 전달되었습니다.");
   }
 
   canvas1.addEventListener("mousedown", start1);
