@@ -1,32 +1,32 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>Consent1 Test</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { margin:0; font-family:sans-serif; display:flex; justify-content:center; background:#f5f5f5; }
-    .wrapper { width:100%; max-width:420px; padding:12px; }
-    .title { font-size:14px; font-weight:bold; margin-bottom:8px; }
-    .pad-container { position:relative; width:100%; height:110px; border:1px solid #ccc; overflow:hidden; touch-action:none; background:white; }
-    canvas { position:absolute; inset:0; }
-    .buttons { display:flex; gap:8px; margin-top:10px; }
-    button { flex:1; padding:10px 0; font-size:14px; border-radius:4px; border:none; cursor:pointer; }
-    .submit { background:#4a6cf7; color:white; }
-    .reset { background:#ddd; }
-  </style>
+<meta charset="UTF-8">
+<title>Consent1</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body { margin:0; font-family:sans-serif; display:flex; justify-content:center; background:#f5f5f5; }
+.wrapper { width:100%; max-width:420px; padding:12px; }
+.title { font-size:14px; font-weight:bold; margin-bottom:8px; }
+.pad-container { position:relative; width:100%; height:110px; border:1px solid #ccc; overflow:hidden; touch-action:none; background:white; }
+canvas { position:absolute; inset:0; }
+.buttons { display:flex; gap:8px; margin-top:10px; }
+button { flex:1; padding:10px 0; font-size:14px; border-radius:4px; border:none; cursor:pointer; }
+.submit { background:#4a6cf7; color:white; }
+.reset { background:#ddd; }
+</style>
 </head>
 <body>
-  <div class="wrapper">
-    <div class="title">개인정보 수집이용 동의 (필수)</div>
-    <div class="pad-container" id="pad">
-      <canvas id="canvas"></canvas>
-    </div>
-    <div class="buttons">
-      <button class="reset" onclick="resetPad()">다시하기</button>
-      <button class="submit" onclick="submitPad()">제출</button>
-    </div>
+<div class="wrapper">
+  <div class="title">개인정보 수집이용 동의 (필수)</div>
+  <div class="pad-container" id="pad">
+    <canvas id="canvas"></canvas>
   </div>
+  <div class="buttons">
+    <button class="reset" onclick="resetPad()">다시하기</button>
+    <button class="submit" onclick="submitPad()">제출</button>
+  </div>
+</div>
 
 <script>
 const pad = document.getElementById("pad");
@@ -45,8 +45,8 @@ resize();
 
 function drawBackground(){
   const w=canvas.width,h=canvas.height;
-  ctx.fillStyle="#cfeeff"; ctx.fillRect(0,0,w/2,h);
-  ctx.fillStyle="#ffffff"; ctx.fillRect(w/2,0,w/2,h);
+  ctx.fillStyle="#cfeeff"; ctx.fillRect(0,0,w/2,h); // 좌측 동의
+  ctx.fillStyle="#ffffff"; ctx.fillRect(w/2,0,w/2,h); // 우측 미동의
   ctx.strokeStyle="#bbb"; ctx.beginPath(); ctx.moveTo(w/2,0); ctx.lineTo(w/2,h); ctx.stroke();
   ctx.fillStyle="#000"; ctx.font="900 11px sans-serif"; ctx.textAlign="center"; ctx.textBaseline="top";
   ctx.fillText("[동의]", w/4,6); ctx.fillText("[미동의]", (w*3)/4,6);
@@ -84,7 +84,7 @@ function resetPad(){
 function submitPad(){
   if(!hasDrawn){ alert("동의 또는 미동의 표시해주세요."); return; }
 
-  // 1️⃣ Typebot 이벤트 전송 (다음 버블 진행)
+  // ✅ Typebot 이벤트 전송 (Flag만 전달)
   if(window.parent){
     window.parent.postMessage({
       type:"typebot_event",
@@ -93,7 +93,7 @@ function submitPad(){
     },"*");
   }
 
-  // 2️⃣ Make.com Webhook으로 이미지 전송
+  // ✅ Make.com Webhook 이미지 전송
   const img = canvas.toDataURL("image/png");  
   fetch("https://hook.us1.make.com/YOUR_WEBHOOK_URL_HERE", {
     method:"POST",
@@ -103,8 +103,8 @@ function submitPad(){
     .catch(err=>console.error("Webhook error", err));
 
   // 테스트용 팝업 (선택)
-  const win=window.open("");
-  win.document.write(`<h3>Consent1 이미지 확인</h3><img src="${img}" style="width:100%;border:1px solid #ccc"/>`);
+  // const win=window.open("");
+  // win.document.write(`<h3>Consent1 이미지 확인</h3><img src="${img}" style="width:100%;border:1px solid #ccc"/>`);
 }
 
 canvas.addEventListener("mousedown", start);
