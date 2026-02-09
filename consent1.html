@@ -1,193 +1,176 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Consent 1</title>
 
 <style>
-  body {
-    margin: 0;
-    padding: 12px;
-    font-family: Arial, sans-serif;
-  }
-
+  body { margin:0; padding:12px; font-family:Arial,sans-serif; }
   .container {
-    display: flex;
-    width: 100%;
-    height: 180px;
-    border: 2px solid #333;
+    display:flex;
+    width:100%;
+    height:180px;
+    border:2px solid #000;
+    position:relative;
   }
-
-  .pad {
-    position: relative;
-    width: 50%;
-    height: 100%;
-    touch-action: none;
+  .box {
+    flex:1;
+    position:relative;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:22px;
+    font-weight:900;
+    color:#000;
+    text-align:center;
   }
+  .agree { background:#ccecff; }
+  .disagree { background:#fff; border-left:2px solid #000; }
 
-  .agree {
-    background-color: #cceeff;
-    border-right: 2px solid #333;
-  }
-
-  .disagree {
-    background-color: #ffffff;
-  }
-
-  .label {
-    position: absolute;
-    top: 6px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 12px;
-    font-weight: 900;
-    color: #000;
-    z-index: 3;
-    pointer-events: none;
+  .tag {
+    position:absolute;
+    top:6px;
+    left:50%;
+    transform:translateX(-50%);
+    font-size:12px;
+    font-weight:700;
   }
 
   canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 2;
+    position:absolute;
+    top:0;
+    left:0;
   }
 
   button {
-    margin-top: 16px;
-    width: 100%;
-    padding: 12px;
-    font-size: 16px;
-    font-weight: bold;
+    width:100%;
+    margin-top:12px;
+    padding:12px;
+    font-size:16px;
+    font-weight:bold;
   }
 </style>
 </head>
 
 <body>
 
-<h3>개인정보 수집 및 이용 동의</h3>
-
-<div class="container">
-  <div class="pad agree" id="agreePad">
-    <div class="label">[동의]</div>
-    <canvas id="agreeCanvas"></canvas>
+<div class="container" id="pad">
+  <div class="box agree">
+    <div class="tag">[동의]</div>
+    동의
   </div>
-
-  <div class="pad disagree" id="disagreePad">
-    <div class="label">[미동의]</div>
-    <canvas id="disagreeCanvas"></canvas>
+  <div class="box disagree">
+    <div class="tag">[미동의]</div>
+    동의하지<br>않음
   </div>
+  <canvas id="draw"></canvas>
 </div>
 
-<button onclick="submitConsent()">제출</button>
+<button onclick="submit()">제출</button>
+<button onclick="resetPad()">다시하기</button>
 
 <script>
-  const agreeCanvas = document.getElementById("agreeCanvas");
-  const disagreeCanvas = document.getElementById("disagreeCanvas");
-  const agreePad = document.getElementById("agreePad");
-  const disagreePad = document.getElementById("disagreePad");
+const canvas = document.getElementById("draw");
+const pad = document.getElementById("pad");
+const ctx = canvas.getContext("2d");
 
-  let currentCanvas = null;
-  let drawing = false;
-  let hasInput = false;
-  let selected = null;
+let drawing = false;
+let selectedSide = null;
 
-  function resizeCanvas() {
-    [agreeCanvas, disagreeCanvas].forEach((c) => {
-      c.width = c.parentElement.clientWidth;
-      c.height = c.parentElement.clientHeight;
-    });
-  }
-  resizeCanvas();
-  window.addEventListener("resize", resizeCanvas);
+function resize() {
+  canvas.width = pad.clientWidth;
+  canvas.height = pad.clientHeight;
+}
+resize();
+window.addEventListener("resize", resize);
 
-  function startDraw(e, canvas, type) {
-    clearAll();
-    selected = type;
-    currentCanvas = canvas;
-    drawing = true;
-    hasInput = true;
+ctx.strokeStyle = "rgba(0,180,0,0.5)";
+ctx.lineWidth = 4;
+ctx.lineCap = "round";
 
-    const ctx = canvas.getContext("2d");
-    ctx.strokeStyle = "rgba(0, 128, 0, 0.5)";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    const pos = getPos(e, canvas);
-    ctx.moveTo(pos.x, pos.y);
-  }
+function getSide(x) {
+  return x < canvas.width / 2 ? "agree" : "disagree";
+}
 
-  function draw(e) {
-    if (!drawing || !currentCanvas) return;
-    const ctx = currentCanvas.getContext("2d");
-    const pos = getPos(e, currentCanvas);
-    ctx.lineTo(pos.x, pos.y);
-    ctx.stroke();
-  }
+function getPos(e) {
+  const r = canvas.getBoundingClientRect();
+  const p = e.touches ? e.touches[0] : e;
+  return { x: p.clientX - r.left, y: p.clientY - r.top };
+}
 
-  function stopDraw() {
+function start(e) {
+  drawing = true;
+  const p = getPos(e);
+  selectedSide = getSide(p.x);
+  ctx.beginPath();
+  ctx.moveTo(p.x, p.y);
+}
+
+function move(e) {
+  if (!drawing) return;
+  const p = getPos(e);
+  if (getSide(p.x) !== selectedSide) {
+    resetPad();
     drawing = false;
-    currentCanvas = null;
+    return;
+  }
+  ctx.lineTo(p.x, p.y);
+  ctx.stroke();
+}
+
+function stop() {
+  drawing = false;
+}
+
+function resetPad() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  selectedSide = null;
+}
+
+pad.addEventListener("mousedown", start);
+pad.addEventListener("mousemove", move);
+window.addEventListener("mouseup", stop);
+
+pad.addEventListener("touchstart", start);
+pad.addEventListener("touchmove", move);
+window.addEventListener("touchend", stop);
+
+function submit() {
+  if (!selectedSide) {
+    alert("동의 또는 미동의를 표시해주세요.");
+    return;
   }
 
-  function getPos(e, canvas) {
-    const rect = canvas.getBoundingClientRect();
-    const touch = e.touches ? e.touches[0] : e;
-    return {
-      x: touch.clientX - rect.left,
-      y: touch.clientY - rect.top
-    };
-  }
+  const out = document.createElement("canvas");
+  out.width = canvas.width;
+  out.height = canvas.height;
+  const octx = out.getContext("2d");
 
-  function clearAll() {
-    [agreeCanvas, disagreeCanvas].forEach((c) => {
-      c.getContext("2d").clearRect(0, 0, c.width, c.height);
-    });
-  }
+  octx.fillStyle = "#ccecff";
+  octx.fillRect(0,0,out.width/2,out.height);
+  octx.fillStyle = "#fff";
+  octx.fillRect(out.width/2,0,out.width/2,out.height);
 
-  agreePad.addEventListener("mousedown", e => startDraw(e, agreeCanvas, "agree"));
-  disagreePad.addEventListener("mousedown", e => startDraw(e, disagreeCanvas, "disagree"));
-  window.addEventListener("mousemove", draw);
-  window.addEventListener("mouseup", stopDraw);
+  octx.font = "bold 22px Arial";
+  octx.fillStyle = "#000";
+  octx.textAlign = "center";
+  octx.fillText("동의", out.width/4, out.height/2);
+  octx.fillText("동의하지 않음", out.width*0.75, out.height/2);
 
-  agreePad.addEventListener("touchstart", e => startDraw(e, agreeCanvas, "agree"));
-  disagreePad.addEventListener("touchstart", e => startDraw(e, disagreeCanvas, "disagree"));
-  window.addEventListener("touchmove", draw);
-  window.addEventListener("touchend", stopDraw);
+  octx.drawImage(canvas,0,0);
 
-  function mergeImage() {
-    const out = document.createElement("canvas");
-    out.width = agreeCanvas.width * 2;
-    out.height = agreeCanvas.height;
-    const ctx = out.getContext("2d");
+  const image = out.toDataURL("image/png");
 
-    ctx.fillStyle = "#cceeff";
-    ctx.fillRect(0, 0, agreeCanvas.width, out.height);
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(agreeCanvas.width, 0, agreeCanvas.width, out.height);
+  window.parent.postMessage({
+    consent1_flag: selectedSide === "agree" ? "Y" : "N",
+    consent1_image: image
+  }, "*");
 
-    ctx.drawImage(agreeCanvas, 0, 0);
-    ctx.drawImage(disagreeCanvas, agreeCanvas.width, 0);
-
-    return out.toDataURL("image/png");
-  }
-
-  function submitConsent() {
-    if (!hasInput || !selected) {
-      alert("동의 또는 미동의를 표시해주세요.");
-      return;
-    }
-
-    const imageData = mergeImage();
-
-    /* Typebot으로 넘길 변수 (Consent1 전용) */
-    window.parent.postMessage({
-      consent1_choice: selected,        // agree / disagree
-      consent1_image: imageData          // base64 이미지
-    }, "*");
-
-    alert("제출되었습니다.");
-  }
+  const w = window.open();
+  w.document.title = "Consent1 Result";
+  w.document.write("<img src='"+image+"' style='width:100%'>");
+}
 </script>
 
 </body>
