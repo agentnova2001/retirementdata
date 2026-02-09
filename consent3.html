@@ -29,7 +29,7 @@
     .pad-container {
       position: relative;
       width: 100%;
-      height: 110px; /* 고정 */
+      height: 110px;
       border: 1px solid #ccc;
       overflow: hidden;
       touch-action: none;
@@ -103,11 +103,11 @@
     const w = canvas.width;
     const h = canvas.height;
 
-    // 좌측 동의
+    // 좌측 배경 (동의)
     ctx.fillStyle = "#cfeeff";
     ctx.fillRect(0, 0, w / 2, h);
 
-    // 우측 미동의
+    // 우측 배경 (미동의)
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(w / 2, 0, w / 2, h);
 
@@ -118,10 +118,17 @@
     ctx.lineTo(w / 2, h);
     ctx.stroke();
 
-    // 텍스트
+    // 상단 라벨
     ctx.fillStyle = "#000";
-    ctx.font = "900 22px sans-serif";
+    ctx.font = "900 11px sans-serif";
     ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+
+    ctx.fillText("[동의]", w / 4, 6);
+    ctx.fillText("[미동의]", (w * 3) / 4, 6);
+
+    // 중앙 텍스트
+    ctx.font = "900 22px sans-serif";
     ctx.textBaseline = "middle";
 
     ctx.fillText("동의", w / 4, h / 2);
@@ -167,7 +174,7 @@
       return;
     }
 
-    ctx.strokeStyle = "rgba(0, 160, 0, 0.35)"; // 초록 + 50% 투명
+    ctx.strokeStyle = "rgb(0,160,0)";
     ctx.lineWidth = 3;
     ctx.lineCap = "round";
     ctx.lineTo(x, y);
@@ -188,7 +195,7 @@
 
   function submitPad() {
     if (!hasDrawn) {
-      alert("동의 또는 동의하지 않음 중 하나에 표시해주세요.");
+      alert("동의 또는 미동의 중 하나에 표시해주세요.");
       return;
     }
 
