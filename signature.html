@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Signature Pad</title>
+
+<style>
+  body {
+    margin: 0;
+    padding: 12px;
+    font-family: Arial, sans-serif;
+  }
+
+  h3 {
+    margin-bottom: 8px;
+  }
+
+  .pad-wrapper {
+    border: 2px solid #333;
+    width: 100%;
+    height: 200px;
+    position: relative;
+    touch-action: none;
+  }
+
+  canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  button {
+    margin-top: 16px;
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: bold;
+  }
+</style>
+</head>
+
+<body>
+
+<h3>서명해 주세요</h3>
+
+<div class="pad-wrapper" id="pad">
+  <canvas id="signatureCanvas"></canvas>
+</div>
+
+<button onclick="submitSignature()">제출</button>
+<button onclick="clearPad()">다시하기</button>
+
+<script>
+  const canvas = document.getElementById("signatureCanvas");
+  const pad = document.getElementById("pad");
+  const ctx = canvas.getContext("2d");
+
+  let drawing = false;
+  let hasInput = false;
+
+  function resizeCanvas() {
+    canvas.width = pad.clientWidth;
+    canvas.height = pad.clientHeight;
+  }
+  resizeCanvas();
+  window.addEventListener("resize", resizeCanvas);
+
+  ctx.strokeStyle = "#000000";
+  ctx.lineWidth = 3;
+  ctx.lineCap = "round";
+
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const point = e.touches ? e.touches[0] : e;
+    return {
+      x: point.clientX - rect.left,
+      y: point.clientY - rect.top
+    };
+  }
+
+  function startDraw(e) {
+    drawing = true;
+    hasInput = true;
+    ctx.beginPath();
+    const pos = getPos(e);
+    ctx.moveTo(pos.x, pos.y);
+  }
+
+  function draw(e) {
+    if (!drawing) return;
+    const pos = getPos(e);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+  }
+
+  function stopDraw() {
+    drawing = false;
+  }
+
+  function clearPad() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    hasInput = false;
+  }
+
+  pad.addEventListener("mousedown", startDraw);
+  pad.addEventListener("mousemove", draw);
+  window.addEventListener("mouseup", stopDraw);
+
+  pad.addEventListener("touchstart", startDraw);
+  pad.addEventListener("touchmove", draw);
+  window.addEventListener("touchend", stopDraw);
+
+  function submitSignature() {
+    if (!hasInput) {
+      alert("서명을 해주세요.");
+      return;
+    }
+
+    const imageData = canvas.toDataURL("image/png");
+
+    /* ✅ Typebot 전달 변수 (자필 서명 전용) */
+    window.parent.postMessage({
+      signature_image: imageData
+    }, "*");
+
+    /* 🔍 Github 테스트용 팝업 */
+    const w = window.open();
+    w.document.write("<img src='" + imageData + "' style='width:100%'>");
+  }
+</script>
+
+</body>
+</html>
