@@ -2,226 +2,117 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Consent 1</title>
+  <title>Consent1 Test</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
-    body {
-      margin: 0;
-      background: #f5f5f5;
-      font-family: sans-serif;
-      display: flex;
-      justify-content: center;
-    }
-
-    .wrapper {
-      width: 100%;
-      max-width: 420px;
-      padding: 12px;
-    }
-
-    .title {
-      font-size: 14px;
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
-
-    .pad-container {
-      position: relative;
-      width: 100%;
-      height: 110px;
-      border: 1px solid #ccc;
-      overflow: hidden;
-      touch-action: none;
-      background: white;
-    }
-
-    canvas {
-      position: absolute;
-      inset: 0;
-    }
-
-    .buttons {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    button {
-      flex: 1;
-      padding: 10px 0;
-      font-size: 14px;
-      border-radius: 4px;
-      border: none;
-      cursor: pointer;
-    }
-
-    .submit {
-      background: #4a6cf7;
-      color: white;
-    }
-
-    .reset {
-      background: #ddd;
-    }
+    body { margin:0; font-family:sans-serif; display:flex; justify-content:center; background:#f5f5f5; }
+    .wrapper { width:100%; max-width:420px; padding:12px; }
+    .title { font-size:14px; font-weight:bold; margin-bottom:8px; }
+    .pad-container { position:relative; width:100%; height:110px; border:1px solid #ccc; overflow:hidden; touch-action:none; background:white; }
+    canvas { position:absolute; inset:0; }
+    .buttons { display:flex; gap:8px; margin-top:10px; }
+    button { flex:1; padding:10px 0; font-size:14px; border-radius:4px; border:none; cursor:pointer; }
+    .submit { background:#4a6cf7; color:white; }
+    .reset { background:#ddd; }
   </style>
 </head>
 
 <body>
-  <div class="wrapper">
-    <div class="title">개인정보 수집·이용 동의 (필수)</div>
-
-    <div class="pad-container" id="pad1">
-      <canvas id="canvas1"></canvas>
-    </div>
-
-    <div class="buttons">
-      <button class="reset" onclick="resetPad1()">다시하기</button>
-      <button class="submit" onclick="submitPad1()">제출</button>
-    </div>
+<div class="wrapper">
+  <div class="title">개인정보 수집이용 동의 (필수)</div>
+  <div class="pad-container" id="pad">
+    <canvas id="canvas"></canvas>
   </div>
+  <div class="buttons">
+    <button class="reset" onclick="resetPad()">다시하기</button>
+    <button class="submit" onclick="submitPad()">제출</button>
+  </div>
+</div>
 
 <script>
-  const pad1 = document.getElementById("pad1");
-  const canvas1 = document.getElementById("canvas1");
-  const ctx1 = canvas1.getContext("2d");
+const pad = document.getElementById("pad");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
 
-  let drawing1 = false;
-  let hasDrawn1 = false;
-  let currentSide1 = null;
+let drawing=false;
+let hasDrawn=false;
+let currentSide=null;
 
-  function resize1() {
-    canvas1.width = pad1.clientWidth;
-    canvas1.height = pad1.clientHeight;
-    drawBackground1();
-  }
+function resize() {
+  canvas.width = pad.clientWidth;
+  canvas.height = pad.clientHeight;
+  drawBackground();
+}
+window.addEventListener("resize", resize);
+resize();
 
-  window.addEventListener("resize", resize1);
-  resize1();
+function drawBackground(){
+  const w=canvas.width, h=canvas.height;
+  ctx.fillStyle="#cfeeff"; ctx.fillRect(0,0,w/2,h);      // 좌측 배경
+  ctx.fillStyle="#ffffff"; ctx.fillRect(w/2,0,w/2,h);   // 우측 배경
+  ctx.strokeStyle="#bbb"; ctx.beginPath(); ctx.moveTo(w/2,0); ctx.lineTo(w/2,h); ctx.stroke(); // 경계
+  ctx.fillStyle="#000"; ctx.font="900 11px sans-serif"; ctx.textAlign="center"; ctx.textBaseline="top";
+  ctx.fillText("[동의]", w/4, 6); ctx.fillText("[미동의]", (w*3)/4, 6);
+  ctx.font="900 22px sans-serif"; ctx.textBaseline="middle";
+  ctx.fillText("동의", w/4, h/2); ctx.fillText("동의하지", (w*3)/4, h/2-12); ctx.fillText("않음", (w*3)/4, h/2+12);
+}
 
-  function drawBackground1() {
-    const w = canvas1.width;
-    const h = canvas1.height;
+function getPos(e){
+  const r=canvas.getBoundingClientRect();
+  return { x:(e.touches?e.touches[0].clientX:e.clientX)-r.left,
+           y:(e.touches?e.touches[0].clientY:e.clientY)-r.top };
+}
 
-    // 좌측 배경 (동의)
-    ctx1.fillStyle = "#cfeeff";
-    ctx1.fillRect(0, 0, w / 2, h);
+function getSide(x){ return x < canvas.width/2 ? "AGREE":"DISAGREE"; }
 
-    // 우측 배경 (미동의)
-    ctx1.fillStyle = "#ffffff";
-    ctx1.fillRect(w / 2, 0, w / 2, h);
+function start(e){
+  const {x,y}=getPos(e);
+  const side=getSide(x);
+  if(currentSide && side!==currentSide){ resetPad(); return; }
+  currentSide=side;
+  drawing=true;
+  hasDrawn=true;
+  ctx.beginPath(); ctx.moveTo(x,y);
+}
+function move(e){
+  if(!drawing) return;
+  const {x,y}=getPos(e);
+  if(getSide(x)!==currentSide){ resetPad(); return; }
+  ctx.strokeStyle="rgba(0,160,0,0.5)"; ctx.lineWidth=3; ctx.lineCap="round";
+  ctx.lineTo(x,y); ctx.stroke();
+}
+function end(){ drawing=false; ctx.closePath(); }
 
-    // 경계선
-    ctx1.strokeStyle = "#bbb";
-    ctx1.beginPath();
-    ctx1.moveTo(w / 2, 0);
-    ctx1.lineTo(w / 2, h);
-    ctx1.stroke();
+function resetPad(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  drawBackground();
+  hasDrawn=false;
+  currentSide=null;
+}
 
-    // 상단 라벨
-    ctx1.fillStyle = "#000";
-    ctx1.font = "900 11px sans-serif";
-    ctx1.textAlign = "center";
-    ctx1.textBaseline = "top";
-    ctx1.fillText("[동의]", w / 4, 6);
-    ctx1.fillText("[미동의]", (w * 3) / 4, 6);
+function submitPad(){
+  if(!hasDrawn){ alert("동의 또는 미동의 중 하나에 표시해주세요."); return; }
+  const img=canvas.toDataURL("image/png");
 
-    // 중앙 텍스트
-    ctx1.font = "900 22px sans-serif";
-    ctx1.textBaseline = "middle";
-    ctx1.fillText("동의", w / 4, h / 2);
-    ctx1.fillText("동의하지", (w * 3) / 4, h / 2 - 12);
-    ctx1.fillText("않음", (w * 3) / 4, h / 2 + 12);
-  }
+  // ✅ Typebot으로 보내기
+  window.parent.postMessage({
+    type:"typebot",
+    consent1_flag: currentSide,
+    consent1_image: img
+  },"*");
 
-  function getPos1(e) {
-    const r = canvas1.getBoundingClientRect();
-    return {
-      x: (e.touches ? e.touches[0].clientX : e.clientX) - r.left,
-      y: (e.touches ? e.touches[0].clientY : e.clientY) - r.top
-    };
-  }
+  alert("Consent1 입력이 Typebot으로 전달되었습니다.");
+}
 
-  function getSide1(x) {
-    return x < canvas1.width / 2 ? "AGREE" : "DISAGREE";
-  }
+canvas.addEventListener("mousedown", start);
+canvas.addEventListener("mousemove", move);
+canvas.addEventListener("mouseup", end);
+canvas.addEventListener("mouseleave", end);
 
-  function start1(e) {
-    const { x, y } = getPos1(e);
-    const side = getSide1(x);
-
-    if (currentSide1 && side !== currentSide1) {
-      resetPad1();
-      return;
-    }
-
-    currentSide1 = side;
-    drawing1 = true;
-    hasDrawn1 = true;
-
-    ctx1.beginPath();
-    ctx1.moveTo(x, y);
-  }
-
-  function move1(e) {
-    if (!drawing1) return;
-
-    const { x, y } = getPos1(e);
-    if (getSide1(x) !== currentSide1) {
-      resetPad1();
-      return;
-    }
-
-    ctx1.strokeStyle = "rgba(0,160,0,0.5)";
-    ctx1.lineWidth = 3;
-    ctx1.lineCap = "round";
-    ctx1.lineTo(x, y);
-    ctx1.stroke();
-  }
-
-  function end1() {
-    drawing1 = false;
-    ctx1.closePath();
-  }
-
-  function resetPad1() {
-    ctx1.clearRect(0, 0, canvas1.width, canvas1.height);
-    drawBackground1();
-    hasDrawn1 = false;
-    currentSide1 = null;
-  }
-
-  function submitPad1() {
-    if (!hasDrawn1) {
-      alert("동의 또는 미동의 중 하나에 표시해주세요.");
-      return;
-    }
-
-    const imageBase64_1 = canvas1.toDataURL("image/png");
-
-    // 👉 Typebot 변수 전달
-    window.parent.postMessage(
-      {
-        type: "typebot:setVariables",
-        variables: {
-          consent1_flag: currentSide1,
-          consent1_image: imageBase64_1
-        }
-      },
-      "*"
-    );
-
-    alert("Consent1 입력이 Typebot으로 전달되었습니다.");
-  }
-
-  canvas1.addEventListener("mousedown", start1);
-  canvas1.addEventListener("mousemove", move1);
-  canvas1.addEventListener("mouseup", end1);
-  canvas1.addEventListener("mouseleave", end1);
-
-  canvas1.addEventListener("touchstart", start1);
-  canvas1.addEventListener("touchmove", move1);
-  canvas1.addEventListener("touchend", end1);
+canvas.addEventListener("touchstart", start);
+canvas.addEventListener("touchmove", move);
+canvas.addEventListener("touchend", end);
 </script>
 </body>
 </html>
