@@ -160,7 +160,7 @@ function submitPad(){
   if(window.parent){
     window.parent.postMessage({
       type:"typebot",
-      eventName:"consent1_completed", // Typebot Wait for Event에서 인식
+      eventName:"consent1_completed",
       consent1_flag: currentSide,
       consent1_image: img
     },"*");
