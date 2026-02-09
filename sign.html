@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>서명</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: sans-serif;
+      background: #f5f5f5;
+    }
+
+    .wrapper {
+      max-width: 360px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 12px;
+      border-radius: 8px;
+    }
+
+    .title {
+      font-size: 15px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .canvas-wrap {
+      width: 100%;
+      height: 120px; /* ✅ 서명 이미지 높이 */
+      border: 1px solid #ccc;
+      position: relative;
+      background: #fff;
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: #888;
+      margin-top: 6px;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    button {
+      flex: 1;
+      padding: 10px;
+      font-size: 14px;
+      border: none;
+      border-radius: 4px;
+    }
+
+    .submit {
+      background: #2b6ef2;
+      color: #fff;
+    }
+
+    .reset {
+      background: #ddd;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrapper">
+    <div class="title">서명</div>
+
+    <div class="canvas-wrap">
+      <canvas id="signCanvas"></canvas>
+    </div>
+
+    <div class="hint">위 영역에 손이나 마우스로 서명해 주세요.</div>
+
+    <div class="buttons">
+      <button class="reset" onclick="resetCanvas()">다시하기</button>
+      <button class="submit" onclick="submitSign()">제출</button>
+    </div>
+  </div>
+
+<script>
+  const SIGN_ID = 'SIGN'; // ⭐ 하드코딩 식별자
+
+  const canvas = document.getElementById('signCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function resizeCanvas() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+  }
+
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  let drawing = false;
+
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    if (e.touches) {
+      return {
+        x: e.touches[0].clientX - rect.left,
+        y: e.touches[0].clientY - rect.top
+      };
+    }
+    return {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    };
+  }
+
+  function startDraw(e) {
+    drawing = true;
+    const pos = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+  }
+
+  function draw(e) {
+    if (!drawing) return;
+    const pos = getPos(e);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+  }
+
+  function endDraw() {
+    drawing = false;
+  }
+
+  canvas.addEventListener('mousedown', startDraw);
+  canvas.addEventListener('mousemove', draw);
+  canvas.addEventListener('mouseup', endDraw);
+  canvas.addEventListener('mouseleave', endDraw);
+
+  canvas.addEventListener('touchstart', startDraw);
+  canvas.addEventListener('touchmove', draw);
+  canvas.addEventListener('touchend', endDraw);
+
+  function resetCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  function submitSign() {
+    const imageData = canvas.toDataURL('image/png');
+
+    // ✅ 테스트용 결과 팝업
+    const w = window.open('', '_blank');
+    w.document
