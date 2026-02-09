@@ -156,13 +156,15 @@ function submitPad(){
 
   const img=canvas.toDataURL("image/png");
 
-  // Typebot으로 전달
+  // Typebot에 이벤트 전송
   if(window.parent){
     window.parent.postMessage({
       type:"typebot",
+      eventName:"consent1_completed", // Typebot Wait for Event에서 인식
       consent1_flag: currentSide,
       consent1_image: img
     },"*");
+    console.log("Typebot event sent", currentSide, img.length);
   }
 
   // 팝업으로 이미지 확인
