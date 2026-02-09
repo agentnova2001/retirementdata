@@ -150,17 +150,17 @@ function resetPad(){
 function submitPad(){
   if(!hasDrawn){ alert("동의 또는 미동의 표시해주세요."); return; }
 
-  // Typebot 이벤트 전송 (flag만)
+  // ✅ Typebot 이벤트 전송 (Wait for Event 감지 가능)
   if(window.parent){  
     window.parent.postMessage({
-      type: "typebot",
-      eventName: "consent1_completed",
+      type: "typebot_event",                // 반드시 "typebot_event"
+      eventName: "consent1_completed", 
       payload: { consent1_flag: currentSide }
     }, "*");
     console.log("Typebot event sent", currentSide);
   }
 
-  // 테스트용 팝업으로 이미지 확인 (Typebot에는 전송 X)
+  // 테스트용 팝업으로 이미지 확인 (선택)
   const img = canvas.toDataURL("image/png");
   const win = window.open("");
   win.document.write(`<h3>Consent1 이미지 확인</h3><img src="${img}" style="width:100%;border:1px solid #ccc"/>`);
