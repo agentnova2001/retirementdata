@@ -189,7 +189,7 @@ function submitPad(){
     type: 'setVariables', 
     variables: {
       "consent1_flag": currentSide,
-      "consent1_image": img
+//      "consent1_image": img
     }
   }, "*");
 
@@ -199,7 +199,7 @@ function submitPad(){
     headers:{ "Content-Type":"application/json" },
     body: JSON.stringify({
       consent1_flag: currentSide,
-      consent1_image: img
+//      consent1_image: img
     })
   }).catch(err => console.log(err));
 
