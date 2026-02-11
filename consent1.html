@@ -93,22 +93,18 @@ function drawBackground(){
   const w = canvas.width;
   const h = canvas.height;
 
-  // 좌측 동의
   ctx.fillStyle = "#cfeeff";
   ctx.fillRect(0,0,w/2,h);
 
-  // 우측 미동의
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(w/2,0,w/2,h);
 
-  // 경계선
   ctx.strokeStyle="#bbb";
   ctx.beginPath();
   ctx.moveTo(w/2,0);
   ctx.lineTo(w/2,h);
   ctx.stroke();
 
-  // 상단 라벨
   ctx.fillStyle="#000";
   ctx.font="900 11px sans-serif";
   ctx.textAlign="center";
@@ -116,7 +112,6 @@ function drawBackground(){
   ctx.fillText("[동의]", w/4, 6);
   ctx.fillText("[미동의]", (w*3)/4, 6);
 
-  // 중앙 텍스트
   ctx.font="900 22px sans-serif";
   ctx.textBaseline="middle";
   ctx.fillText("동의", w/4, h/2);
@@ -155,14 +150,11 @@ function start(e){
 
 function move(e){
   if(!drawing) return;
-
   const {x,y} = getPos(e);
-
   if(getSide(x) !== currentSide){
     resetPad();
     return;
   }
-
   ctx.strokeStyle = "rgba(0,160,0,0.5)";
   ctx.lineWidth = 3;
   ctx.lineCap = "round";
@@ -190,17 +182,19 @@ function submitPad(){
 
   const img = canvas.toDataURL("image/png");
 
-  // 🔹 Typebot 변수 전달 (이 구조가 핵심)
+  // ✅ 핵심 수정: Typebot의 공식 postMessage 규격 준수
+  // parent가 아닌 window.postMessage를 사용할 수도 있지만, 
+  // iframe 내부라면 window.parent.postMessage가 표준입니다.
   window.parent.postMessage({
-    isFromTypebot: true,
-    type: "typebot",
-    payload: {
-      consent1_flag: currentSide
+    type: 'setVariables', 
+    variables: {
+      "consent1_flag": currentSide,
+      "consent1_image": img
     }
   }, "*");
 
-  // 🔹 Make.com 전송 (Webhook 주소 교체 필요)
-  fetch("https://hook.us1.make.com/YOUR_WEBHOOK_URL", {
+  // ✅ 선택 사항: 메시지 전송 후 Make.com 등 외부 연동 진행
+  fetch("https://hook.us1.make.com", {
     method:"POST",
     headers:{ "Content-Type":"application/json" },
     body: JSON.stringify({
@@ -208,9 +202,11 @@ function submitPad(){
       consent1_image: img
     })
   }).catch(err => console.log(err));
+
+  // ✅ 추가 팁: 제출 후 봇이 다음 단계로 넘어가게 하려면 
+  // Typebot 에디터에서 Condition 블록으로 consent1_flag 변수를 체크하세요.
 }
 
-// 이벤트 등록
 canvas.addEventListener("mousedown", start);
 canvas.addEventListener("mousemove", move);
 canvas.addEventListener("mouseup", end);
