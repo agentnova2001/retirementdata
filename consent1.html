@@ -194,14 +194,14 @@ function submitPad(){
   }, "*");
 
   // ✅ 선택 사항: 메시지 전송 후 Make.com 등 외부 연동 진행
-  fetch("https://hook.us1.make.com", {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({
-      consent1_flag: currentSide,
+//  fetch("https://hook.us1.make.com", {
+//    method:"POST",
+//    headers:{ "Content-Type":"application/json" },
+//    body: JSON.stringify({
+//      consent1_flag: currentSide,
 //      consent1_image: img
-    })
-  }).catch(err => console.log(err));
+  //  })
+//  }).catch(err => console.log(err));
 
   // ✅ 추가 팁: 제출 후 봇이 다음 단계로 넘어가게 하려면 
   // Typebot 에디터에서 Condition 블록으로 consent1_flag 변수를 체크하세요.
