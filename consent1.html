@@ -86,9 +86,7 @@ function resetPad(){
 function submitPad() {
   if(!hasDrawn){ alert("동의 또는 미동의 표시해주세요."); return; }
 
-  const img = canvas.toDataURL("image/png");
-
-  // ✅ [수정] 409 에러 방지를 위해 이미지는 제외하고 Flag만 전송
+  // ✅ [중요] 409 에러 방지: Typebot에는 가벼운 Flag(텍스트)만 전송
   if (window.parent) {
     window.parent.postMessage({
       type: 'setVariables',
@@ -96,20 +94,16 @@ function submitPad() {
     }, "*");
   }
 
-  // ✅ [수정] Make.com 전송 (URL이 없다면 404가 뜨니 실제 주소로 교체하세요)
+  // ✅ [중요] 이미지는 Make.com으로만 전송 (CORS 에러 방지용 mode: 'no-cors' 추가)
   const webhookUrl = "https://hook.us1.make.com"; 
-  
   fetch(webhookUrl, {
     method: "POST",
     mode: "no-cors",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       consent1_flag: currentSide,
-      consent1_image: img
+      consent1_image: canvas.toDataURL("image/png")
     })
-  }).then(() => {
-    console.log("전송 시도 성공");
-  }).catch(e => console.error(e));
+  }).catch(e => console.error("Make 전송 에러:", e));
 }
 
 canvas.addEventListener("mousedown", start);
