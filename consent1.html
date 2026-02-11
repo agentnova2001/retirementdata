@@ -2,7 +2,6 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>Consent Test</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
   body { margin:0; font-family:sans-serif; display:flex; justify-content:center; background:#f5f5f5; }
@@ -10,7 +9,7 @@
   .pad-container { position:relative; width:100%; height:110px; border:1px solid #ccc; background:white; touch-action:none; }
   canvas { position:absolute; inset:0; width:100%; height:100%; }
   .buttons { display:flex; gap:8px; margin-top:10px; }
-  button { flex:1; padding:10px 0; font-size:14px; border-radius:4px; border:none; cursor:pointer; }
+  button { flex:1; padding:12px 0; font-size:14px; border-radius:4px; border:none; cursor:pointer; font-weight:bold; }
   .submit { background:#4a6cf7; color:white; }
   .reset { background:#ddd; }
 </style>
@@ -28,7 +27,7 @@
 const pad = document.getElementById("pad");
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
-let drawing = false; let hasDrawn = false; let currentSide = null;
+let drawing = false; let hasDrawn = false;
 
 function resize() {
   canvas.width = pad.clientWidth;
@@ -47,6 +46,7 @@ function drawBackground() {
   ctx.fillText("동의", w/4, h/2); ctx.fillText("미동의", (w*3)/4, h/2);
 }
 
+// 마우스/터치 좌표 계산
 function getPos(e) {
   const r = canvas.getBoundingClientRect();
   const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -54,43 +54,9 @@ function getPos(e) {
   return { x: clientX - r.left, y: clientY - r.top };
 }
 
-function start(e) {
-  const {x,y} = getPos(e);
-  currentSide = x < canvas.width/2 ? "AGREE" : "DISAGREE";
-  drawing = true; hasDrawn = true;
-  ctx.beginPath(); ctx.moveTo(x,y);
-}
-
-function move(e) {
-  if(!drawing) return;
-  const {x,y} = getPos(e);
-  ctx.strokeStyle = "rgba(0,160,0,0.5)"; ctx.lineWidth = 3;
-  ctx.lineTo(x,y); ctx.stroke();
-}
-
-function stop() { drawing = false; ctx.closePath(); }
-
-function resetPad() {
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  drawBackground(); hasDrawn = false;
-}
-
-function submitPad() {
-  if(!hasDrawn) { alert("서명해주세요."); return; }
-
-  console.log("전송 시도:", currentSide);
-
-  // ✅ Typebot 연동 핵심 코드
-  if (window.parent) {
-    window.parent.postMessage({
-      type: 'setVariables',
-      variables: { "consent1_flag": currentSide }
-    }, "*");
-    alert("전송되었습니다! (값: " + currentSide + ")");
-  } else {
-    console.error("부모 창을 찾을 수 없습니다.");
-  }
-}
+function start(e) { drawing = true; hasDrawn = true; ctx.beginPath(); const {x,y} = getPos(e); ctx.moveTo(x,y); }
+function move(e) { if(!drawing) return; const {x,y} = getPos(e); ctx.strokeStyle = "green"; ctx.lineWidth = 2; ctx.lineTo(x,y); ctx.stroke(); }
+function stop() { drawing = false; }
 
 canvas.addEventListener("mousedown", start);
 canvas.addEventListener("mousemove", move);
@@ -98,6 +64,26 @@ window.addEventListener("mouseup", stop);
 canvas.addEventListener("touchstart", (e) => { e.preventDefault(); start(e); });
 canvas.addEventListener("touchmove", (e) => { e.preventDefault(); move(e); });
 canvas.addEventListener("touchend", stop);
+
+function resetPad() { ctx.clearRect(0,0,canvas.width,canvas.height); drawBackground(); hasDrawn = false; }
+
+function submitPad() {
+  if(!hasDrawn) { alert("서명 후 제출해주세요."); return; }
+  
+  // ✅ 1. Typebot 연동을 위한 데이터 준비
+  const finalFlag = "AGREE"; // 테스트용 고정값
+
+  // ✅ 2. Typebot으로 postMessage 전송 (Make.com 코드 삭제됨)
+  if (window.parent) {
+    window.parent.postMessage({
+      type: 'setVariables',
+      variables: { "consent1_flag": finalFlag }
+    }, "*");
+    console.log("Typebot 전송 시도 완료 (Flag: " + finalFlag + ")");
+  } else {
+    console.error("부모 창(Typebot)을 찾을 수 없습니다.");
+  }
+}
 </script>
 </body>
 </html>
