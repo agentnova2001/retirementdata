@@ -70,18 +70,17 @@ function resetPad() { ctx.clearRect(0,0,canvas.width,canvas.height); drawBackgro
 function submitPad() {
   if(!hasDrawn) { alert("서명 후 제출해주세요."); return; }
   
-  // ✅ 1. Typebot 연동을 위한 데이터 준비
-  const finalFlag = "AGREE"; // 테스트용 고정값
+  const finalFlag = "AGREE";
 
-  // ✅ 2. Typebot으로 postMessage 전송 (Make.com 코드 삭제됨)
-  if (window.parent) {
-    window.parent.postMessage({
+  // 부모(parent)와 최상위(top) 양쪽에 메시지를 던집니다.
+  const target = window.parent || window.top;
+  
+  if (target) {
+    target.postMessage({
       type: 'setVariables',
       variables: { "consent1_flag": finalFlag }
     }, "*");
-    console.log("Typebot 전송 시도 완료 (Flag: " + finalFlag + ")");
-  } else {
-    console.error("부모 창(Typebot)을 찾을 수 없습니다.");
+    alert("데이터 전송 시도: " + finalFlag);
   }
 }
 </script>
