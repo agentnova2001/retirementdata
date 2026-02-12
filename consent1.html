@@ -6,10 +6,10 @@
 <style>
   body { margin:0; font-family:sans-serif; display:flex; justify-content:center; background:#f5f5f5; }
   .wrapper { width:100%; max-width:420px; padding:12px; }
-  .pad-container { position:relative; width:100%; height:110px; border:1px solid #ccc; background:white; touch-action:none; }
-  canvas { position:absolute; inset:0; width:100%; height:100%; }
+  .pad-container { position:relative; width:100%; height:120px; border:1px solid #ccc; background:white; touch-action:none; }
+  canvas { position:absolute; inset:0; width:100%; height:100%; cursor:crosshair; }
   .buttons { display:flex; gap:8px; margin-top:10px; }
-  button { flex:1; padding:12px 0; font-size:14px; border-radius:4px; border:none; cursor:pointer; font-weight:bold; }
+  button { flex:1; padding:15px 0; font-size:14px; border-radius:6px; border:none; cursor:pointer; font-weight:bold; }
   .submit { background:#4a6cf7; color:white; }
   .reset { background:#ddd; }
 </style>
@@ -41,12 +41,13 @@ function drawBackground() {
   const w = canvas.width; const h = canvas.height;
   ctx.fillStyle = "#cfeeff"; ctx.fillRect(0,0,w/2,h);
   ctx.fillStyle = "#ffffff"; ctx.fillRect(w/2,0,w/2,h);
-  ctx.strokeStyle="#bbb"; ctx.beginPath(); ctx.moveTo(w/2,0); ctx.lineTo(w/2,h); ctx.stroke();
-  ctx.fillStyle="#000"; ctx.font="900 12px sans-serif"; ctx.textAlign="center";
-  ctx.fillText("동의", w/4, h/2); ctx.fillText("미동의", (w*3)/4, h/2);
+  ctx.strokeStyle="#bbb"; ctx.setLineDash([5, 5]);
+  ctx.beginPath(); ctx.moveTo(w/2,0); ctx.lineTo(w/2,h); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle="#000"; ctx.font="bold 14px sans-serif"; ctx.textAlign="center";
+  ctx.fillText("동의", w/4, h/2 + 5); ctx.fillText("미동의", (w*3)/4, h/2 + 5);
 }
 
-// 마우스/터치 좌표 계산
 function getPos(e) {
   const r = canvas.getBoundingClientRect();
   const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -55,7 +56,7 @@ function getPos(e) {
 }
 
 function start(e) { drawing = true; hasDrawn = true; ctx.beginPath(); const {x,y} = getPos(e); ctx.moveTo(x,y); }
-function move(e) { if(!drawing) return; const {x,y} = getPos(e); ctx.strokeStyle = "green"; ctx.lineWidth = 2; ctx.lineTo(x,y); ctx.stroke(); }
+function move(e) { if(!drawing) return; const {x,y} = getPos(e); ctx.strokeStyle = "#222"; ctx.lineWidth = 3; ctx.lineTo(x,y); ctx.stroke(); }
 function stop() { drawing = false; }
 
 canvas.addEventListener("mousedown", start);
@@ -68,19 +69,24 @@ canvas.addEventListener("touchend", stop);
 function resetPad() { ctx.clearRect(0,0,canvas.width,canvas.height); drawBackground(); hasDrawn = false; }
 
 function submitPad() {
-  if(!hasDrawn) { alert("서명 후 제출해주세요."); return; }
+  if(!hasDrawn) { alert("서명 영역에 표시를 해주세요."); return; }
   
-  const finalFlag = "AGREE";
+  // 캔버스 마지막 터치 지점이나 중앙값 기준으로 간단히 판별 (여기서는 테스트용 AGREE 고정)
+  const finalFlag = "AGREE"; 
 
-  // 부모(parent)와 최상위(top) 양쪽에 메시지를 던집니다.
-  const target = window.parent || window.top;
-  
-  if (target) {
-    target.postMessage({
+  // ✅ [Typebot 핵심 연동] 
+  // 루프 방식이므로 부모 창에 변수만 정확히 던지면 됩니다.
+  if (window.parent) {
+    window.parent.postMessage({
       type: 'setVariables',
       variables: { "consent1_flag": finalFlag }
     }, "*");
-    alert("데이터 전송 시도: " + finalFlag);
+    
+    // 사용자 경험을 위해 버튼 비활성화 및 안내
+    const btn = document.querySelector('.submit');
+    btn.innerText = "전송됨";
+    btn.style.background = "#28a745";
+    btn.disabled = true;
   }
 }
 </script>
